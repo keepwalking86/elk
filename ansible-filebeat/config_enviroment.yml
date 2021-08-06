@@ -1,0 +1,15 @@
+---
+    #Config filebeat
+    filebeat_version: 7.x
+    filebeat_inputs:
+      - type: log
+        paths:
+          - "/var/logs/game-*"
+        exclude_files: ['\.gz$']
+        fields:
+          service: game
+    filebeat_output_elasticsearch_enabled: false
+    filebeat_output_logstash_enabled: true
+    filebeat_output_logstash_hosts:
+      - "192.168.1.100:5044"
+    filebeat_ssl_insecure: "true"
