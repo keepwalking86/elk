@@ -1,0 +1,30 @@
+filebeat.inputs:
+  # List of prospectors to fetch data.
+- type: filestream
+  id: example-java
+  paths:
+    - /path/to/logs/full.log
+  exclude_files: ['\.gz$']
+  fields:
+    target: ''
+    owner: 'example'
+    server: 'java01'
+    service: "Example-Service"
+
+#output log to example-java kafka topic
+output.kafka:
+  codec.format:
+    #string: '%{[@timestamp]} %{[message]}'
+    string: '%{[message]}}'
+  hosts: ["changeme:9092"]
+  topic: "example-java"
+  partition.round_robin:
+    reachable_only: false
+  required_acks: 1
+  compression: gzip
+  max_message_bytes: 1000000
+
+filebeat.config.modules:
+  path: /etc/filebeat/modules.d/*.yml
+  reload.enabled: false
+
