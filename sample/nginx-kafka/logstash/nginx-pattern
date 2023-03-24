@@ -1,0 +1,2 @@
+#/etc/logstash/patterns/nginx-pattern
+NGINX_STATIC %{IPORHOST:http_x_forwarded_for} - %{IP:remote_addr} - %{WORD:upstream_cache_status} \[%{HTTPDATE:time}\] \"%{DATA:request}\" %{NUMBER:status} %{NUMBER:request_body_byte} %{NUMBER:response_time} (?:%{DATA:referrer}|-) "%{GREEDYDATA:agent}"

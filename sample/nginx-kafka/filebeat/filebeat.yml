@@ -1,0 +1,26 @@
+filebeat.inputs:
+  # List of prospectors to fetch data.
+- type: filestream
+  id: nginx-static
+  paths:
+    - /var/log/nginx/frontend_static_access.log
+  exclude_files: ['\.gz$']
+  fields:
+    owner: 'example'
+    service: 'example-static'
+    server: 'static01'
+output.kafka:
+  codec.format:
+    #string: '%{[@timestamp]} %{[message]}'
+    string: '%{[message]}'
+  hosts: ["changeme:9092"]
+  topic: "nginx-static"
+  partition.round_robin:
+    reachable_only: false
+  required_acks: 1
+  compression: gzip
+  max_message_bytes: 1000000
+
+filebeat.config.modules:
+  path: /etc/filebeat/modules.d/*.yml
+  reload.enabled: false
