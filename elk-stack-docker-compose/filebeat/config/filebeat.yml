@@ -1,0 +1,18 @@
+filebeat.inputs:
+- type: filestream
+  id: messsage
+  paths:
+  - '/var/log/syslog'
+#  parsers:
+#    - ndjson:
+#        target: ""
+#        message_key: msg
+#        keys_under_root: true
+output:
+  logstash:
+    hosts: ["logstash:5044"]
+
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false

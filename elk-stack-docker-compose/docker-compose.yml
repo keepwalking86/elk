@@ -1,0 +1,95 @@
+version: '3.8'
+services:
+  elasticsearch:
+    build:
+      context: elasticsearch/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    deploy:
+      resources:
+        limits:
+          memory: 1GB
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      node.name: localhost
+      cluster.name: es-cluster
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      ELASTIC_PASSWORD: changeme
+    networks:
+      - elastic
+
+  kibana:
+    build:
+      context: kibana/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    deploy:
+      resources:
+        limits:
+          memory: 1GB
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+      - 5601:5601
+    environment:
+      ELASTIC_PASSWORD: changeme
+    networks:
+      - elastic
+    depends_on:
+      - elasticsearch
+
+  logstash:
+    build:
+      context: logstash/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    deploy:
+      resources:
+        limits:
+          memory: 1GB
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - 5044:5044
+      - 9600:9600
+    environment:
+      LS_JAVA_OPTS: "-Xmx512m -Xms512m"
+    networks:
+      - elastic
+    depends_on:
+      - elasticsearch
+
+  filebeat:
+    user: root
+    build:
+      context: filebeat/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    deploy:
+      resources:
+        limits:
+          memory: 1GB
+    command:
+      - "-e"
+      - "--strict.perms=false"
+    volumes:
+      - ./filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - /var/log/syslog:/var/log/syslog
+    networks:
+      - elastic
+    depends_on:
+      - logstash
+
+networks:
+  elastic:
+    driver: bridge
+
+volumes:
+  elasticsearch:
