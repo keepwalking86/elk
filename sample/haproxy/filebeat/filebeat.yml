@@ -1,0 +1,16 @@
+filebeat.inputs:
+  # List of prospectors to fetch data.
+- type: filestream
+  id: sample-proxy
+  paths:
+    - /var/log/haproxy.log
+  exclude_files: ['\.gz$']
+  fields:
+    "owner": "sample"
+    "service": "proxy"
+    "server": "node01"
+output:
+  ### Logstash as output
+  logstash:
+    # The Logstash hosts
+    hosts: ["logstash:5044"]
