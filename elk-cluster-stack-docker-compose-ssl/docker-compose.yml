@@ -1,0 +1,159 @@
+version: '3.8'
+services:
+  elasticsearch01:
+    build:
+      context: elasticsearch01/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    deploy:
+      resources:
+        limits:
+          memory: 1GB
+    volumes:
+      - ./elasticsearch01/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./elasticsearch01:/usr/share/elasticsearch/data
+      - ./elasticsearch01/certs:/usr/share/elasticsearch/config/certs
+    ports:
+      - 9200:9200
+      #- 9300:9300
+    environment:
+      - node.name=elasticsearch01
+      - ELASTIC_PASSWORD=changeme
+      - bootstrap.memory_lock=true
+      - cluster.name=elasticsearch-cluster
+      - discovery.seed_hosts=elasticsearch01,elasticsearch02
+      - cluster.initial_master_nodes=elasticsearch01,elasticsearch02
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/elasticsearch01.key
+      - xpack.security.http.ssl.certificate=certs/elasticsearch01.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.http.ssl.verification_mode=certificate
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/elasticsearch01.key
+      - xpack.security.transport.ssl.certificate=certs/elasticsearch01.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - elastic
+  elasticsearch02:
+    build:
+      context: elasticsearch02/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    deploy:
+      resources:
+        limits:
+          memory: 1GB
+    volumes:
+      - ./elasticsearch02/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./elasticsearch02:/usr/share/elasticsearch/data
+      - ./elasticsearch02/certs:/usr/share/elasticsearch/config/certs
+    ports:
+      - 29200:9200
+      #- 9300:9300
+    environment:
+      - node.name=elasticsearch02
+      - ELASTIC_PASSWORD=changeme
+      - bootstrap.memory_lock=true
+      - cluster.name=elasticsearch-cluster
+      - discovery.seed_hosts=elasticsearch01,elasticsearch02
+      - cluster.initial_master_nodes=elasticsearch01,elasticsearch02
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/elasticsearch01.key
+      - xpack.security.http.ssl.certificate=certs/elasticsearch01.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.http.ssl.verification_mode=certificate
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/elasticsearch01.key
+      - xpack.security.transport.ssl.certificate=certs/elasticsearch01.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - elastic
+  kibana:
+    build:
+      context: kibana/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    deploy:
+      resources:
+        limits:
+          memory: 1GB
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./kibana/certs:/usr/share/kibana/config/certs
+    ports:
+      - 5601:5601
+    environment:
+      ELASTIC_PASSWORD: changeme
+      ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES: config/certs/ca/ca.crt
+    networks:
+      - elastic
+    # depends_on:
+    #   - elasticsearch01
+
+  logstash:
+    build:
+      context: logstash/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    deploy:
+      resources:
+        limits:
+          memory: 1GB
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logstash/certs:/usr/share/logstash/config/certs
+    ports:
+      - 5044:5044
+      - 9600:9600
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.monitoring.elasticsearch.ssl.certificate_authority=config/certs/ca/ca.crt
+      - xpack.monitoring.elasticsearch.ssl.verification_mode=certificate
+    networks:
+      - elastic
+    # depends_on:
+    #   - elasticsearch01
+
+  filebeat:
+    user: root
+    build:
+      context: filebeat/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    deploy:
+      resources:
+        limits:
+          memory: 512MB
+    command:
+      - "-e"
+      - "--strict.perms=false"
+    volumes:
+      - ./filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - /var/log/syslog:/var/log/syslog
+      - /var/log/auth.log:/var/log/auth.log
+    networks:
+      - elastic
+    depends_on:
+      - logstash
+
+networks:
+  elastic:
+    driver: bridge
+
+#volumes:
+  #elasticsearch:

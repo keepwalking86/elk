@@ -1,0 +1,6 @@
+network.host: 0.0.0.0
+
+#xpack.security.enabled: true
+xpack.monitoring.collection.enabled: true
+
+ingest.geoip.downloader.enabled: false

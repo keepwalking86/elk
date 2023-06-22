@@ -1,0 +1,31 @@
+filebeat.inputs:
+- type: filestream
+  id: syslog
+  paths:
+    - /var/log/syslog
+  exclude_files: ['\.gz$']
+  fields:
+    "owner": "keepwalking86"
+    "service": "syslog"
+- type: filestream
+  id: auth
+  paths:
+    - /var/log/auth.log
+  exclude_files: ['\.gz$']
+  fields:
+    "owner": "keepwalking86"
+    "service": "auth"
+
+#  parsers:
+#    - ndjson:
+#        target: ""
+#        message_key: msg
+#        keys_under_root: true
+output:
+  logstash:
+    hosts: ["logstash:5044"]
+
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
