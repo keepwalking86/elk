@@ -1,0 +1,1 @@
+%{GREEDYDATA}:"%{TIMESTAMP_ISO8601:timestamp}%{GREEDYDATA}"s":"%{WORD:severity}",%{SPACE}"c":"%{WORD:COMMAND}",%{SPACE}"id":%{NUMBER:id},%{SPACE}"ctx":"%{WORD:context}","msg":"%{GREEDYDATA:msg}","attr":{"type":"%{WORD:type}","ns":"%{GREEDYDATA:namepspace},"command":{"%{WORD:operation}":"%{WORD}",%{GREEDYDATA:log},"durationMillis":%{NUMBER:duration}}}
